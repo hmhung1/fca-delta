@@ -1,5 +1,6 @@
 # Node.js
 node_modules/
+.git/
 
 # npm logs
 npm-debug.log*
