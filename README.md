@@ -1,89 +1,38 @@
-<div align="center">
+This repo is a fork from main repo and will usually have new features bundled faster than main repo (and maybe bundle some bugs, too).
 
-![20241210_183831](https://i.imgur.com/QpqujSt.jpeg)
-
-<h2 align="center"><b>Ws3 Facebook Chat API</b></h2><br>This package is created by **NethWs3Dev.**
-
-![Image](https://i.imgur.com/nFCeYmQ.jpeg)
-
-_Disclaimer_: We are not responsible if your account gets banned for spammy activities such as sending lots of messages to people you don't know, sending messages very quickly, sending spammy looking URLs, logging in and out very quickly... Be responsible Facebook citizens.
-
-For changelogs and updates about ws3-fca and all projects, be sure to follow our [page](https://www.facebook.com/wyumibot).
-
-See [below](#projects-using-this-api) for projects using this API.
-
-# 🤖 Features:
-
-- [X] Once the error is detected it will automatically relogin the appstate.
-- [X] If the appstate itself is logged out it will automatically logged out and you can resubmit it again, But aside of that, if it has an automated behavior, it will relogin then it will dismiss automatically and refreshes the login.
-
-![Image](https://i.imgur.com/Pt6oCS0.jpeg)
-- [X] Added a feature where if the account is locked/suspended, it will stop the login process and shows the information and why it was locked/suspended.
-
-![Image](https://i.imgur.com/R0lzR6R.jpeg)
-![Image](https://i.imgur.com/PPE3fB5.jpeg)
-
-No need to put on listenMqtt.
-
-- [X] Added api.ws3.relogin()
-- [X] Added api.stopListenMqtt()
-- [X] Added api.getRegion()
-- [X] Added api.setProfileGuard()
-- [X] Added api.addFunctions()
-- [X] Added api.getBotInitialData()
-- [X] Added refreshFb_dtsg (*Facebook's dynamic token security generation*): This will automatically refresh every 12:00 AM in GMT+8 PH time.
-- [X] Changed npmlog to normal console.log due to render log issues
-- [X] Added a detection if it's locked or suspended (*will show the information about the lock/suspension*)
-- [X] Added randomUserAgent on setOptions (*experimental*)
-- [X] Added bypassRegion on setOptions (*choose between PRN, PNB, HKG, SYD, VLL, LLA, SIN..., experimental*)
-- [X] Fixed userAgent on all mqttEvents
-- [X] Tested on Mirai/Autobot (*try on Xavia or Goat*)
-
-
-> You can use cookies editor available in kiwi browser, edge and chrome extension for PC.
-We the ws3-fca team/contributors are recommending you to use the Firefox app for less logout, or use this website if you have no access on these browsers specially iOS user. Use [Appstate Getter here](https://joncll.serv00.net/apst.html)
-
-# ❓ FAQ's:
-<div align="left">
-
-* If you encounter the error due to Promise reject issue, you can put this code in your index.js
-```javascript
-process.on('unhandledRejection', (reason, promise) => {
-    console.error('Unhandled Rejection at:', promise, 'reason:', reason);
-});
-```
-</div>
-
-If you encounter errors on fca, you can contact me [here.](https://www.facebook.com/wieginesalpocialechavez)
-
-[JOIN OUR GROUP: ChatBot Community](https://www.facebook.com/groups/coders.dev)
------------------------------------
-</div>
+# Unofficial Facebook Chat API
+<img alt="version" src="https://img.shields.io/github/package-json/v/miraiPr0ject/fca-unofficial?label=github&style=flat-square">
 
 Facebook now has an official API for chat bots [here](https://developers.facebook.com/docs/messenger-platform).
 
 This API is the only way to automate chat functionalities on a user account. We do this by emulating the browser. This means doing the exact same GET/POST requests and tricking Facebook into thinking we're accessing the website normally. Because we're doing it this way, this API won't work with an auth token but requires the credentials of a Facebook account.
 
+_Disclaimer_: We are not responsible if your account gets banned for spammy activities such as sending lots of messages to people you don't know, sending messages very quickly, sending spammy looking URLs, logging in and out very quickly... Be responsible Facebook citizens.
+
+See [below](#projects-using-this-api) for projects using this API.
+
+See the [full changelog](/CHANGELOG.md) for release details.
+
 ## Install
-If you just want to use ws3-fca, you should use this command:
+If you just want to use fca-unofficial, you should use this command:
 ```bash
-npm install ws3-fca@latest
+npm install fca-luxury
 ```
-It will download `ws3-fca` from NPM repositories
+It will download ` fca-luxury` from NPM repositories
+
+## Testing your bots
+If you want to test your bots without creating another account on Facebook, you can use [Facebook Whitehat Accounts](https://www.facebook.com/whitehat/accounts/).
 
 ## Example Usage
 ```javascript
-const login = require("ws3-fca");
+const login = require("fca-luxury");
 
 // Create simple echo bot
-login({
-  appState: []
-}, {
-    //setOptions will be here
-} (err, api) => {
-    if (err) return console.error(err);
-    api.listenMqtt((err, event) => {
-        api.sendMessage(event.body, event.threadID);
+login({email: "FB_EMAIL", password: "FB_PASSWORD"}, (err, api) => {
+    if(err) return console.error(err);
+
+    api.listen((err, message) => {
+        api.sendMessage(message.body, message.threadID);
     });
 });
 ```
@@ -92,6 +41,10 @@ Result:
 
 <img width="517" alt="screen shot 2016-11-04 at 14 36 00" src="https://cloud.githubusercontent.com/assets/4534692/20023545/f8c24130-a29d-11e6-9ef7-47568bdbc1f2.png">
 
+
+## Documentation
+
+You can see it [here](DOCS.md).
 
 ## Main Functionality
 
@@ -111,11 +64,9 @@ __Tip__: to find your own ID, you can look inside the cookies. The `userID` is u
 
 __Example (Basic Message)__
 ```js
-const login = require("ws3-fca");
+const login = require("fca-luxury");
 
-login({ 
-    appState: []
-}, (err, api) => {
+login({email: "FB_EMAIL", password: "FB_PASSWORD"}, (err, api) => {
     if(err) return console.error(err);
 
     var yourID = "000000000000000";
@@ -126,11 +77,9 @@ login({
 
 __Example (File upload)__
 ```js
-const login = require("ws3-fca");
+const login = require("fca-luxury");
 
-login({ 
-    appState: []
-}, (err, api) => {
+login({email: "FB_EMAIL", password: "FB_PASSWORD"}, (err, api) => {
     if(err) return console.error(err);
 
     // Note this example uploads an image called image.jpg
@@ -152,11 +101,9 @@ __Example__
 
 ```js
 const fs = require("fs");
-const login = require("ws3-fca");
+const login = require("fca-luxury");
 
-var credentials = { 
-    appState: []
-};
+var credentials = {email: "FB_EMAIL", password: "FB_PASSWORD"};
 
 login(credentials, (err, api) => {
     if(err) return console.error(err);
@@ -170,7 +117,7 @@ Alternative: Use [c3c-fbstate](https://github.com/c3cbot/c3c-fbstate) to get fbs
 ------------------------------------
 
 ### Listening to a chat
-#### api.listenMqtt(callback)
+#### api.listen(callback)
 
 Listen watches for messages sent in a chat. By default this won't receive events (joining/leaving a chat, title change etc…) but it can be activated with `api.setOptions({listenEvents: true})`. This will by default ignore messages sent by the current account, you can enable listening to your own messages with `api.setOptions({selfListen: true})`.
 
@@ -178,7 +125,7 @@ __Example__
 
 ```js
 const fs = require("fs");
-const login = require("ws3-fca");
+const login = require("fca-luxury");
 
 // Simple echo bot. It will repeat everything that you say.
 // Will stop when you say '/stop'
@@ -188,7 +135,7 @@ login({appState: JSON.parse(fs.readFileSync('appstate.json', 'utf8'))}, (err, ap
     api.setOptions({listenEvents: true});
 
     var stopListening = api.listenMqtt((err, event) => {
-        if( err) return console.error(err);
+        if(err) return console.error(err);
 
         api.markAsRead(event.threadID, (err) => {
             if(err) console.error(err);
@@ -210,12 +157,42 @@ login({appState: JSON.parse(fs.readFileSync('appstate.json', 'utf8'))}, (err, ap
 });
 ```
 
+## FAQS
+
+1. How do I run tests?
+> For tests, create a `test-config.json` file that resembles `example-config.json` and put it in the `test` directory. From the root >directory, run `npm test`.
+
+2. Why doesn't `sendMessage` always work when I'm logged in as a page?
+> Pages can't start conversations with users directly; this is to prevent pages from spamming users.
+
+3. What do I do when `login` doesn't work?
+> First check that you can login to Facebook using the website. If login approvals are enabled, you might be logging in incorrectly. For how to handle login approvals, read our docs on [`login`](DOCS.md#login).
+
+4. How can I avoid logging in every time?  Can I log into a previous session?
+> We support caching everything relevant for you to bypass login. `api.getAppState()` returns an object that you can save and pass into login as `{appState: mySavedAppState}` instead of the credentials object.  If this fails, your session has expired.
+
+5. Do you support sending messages as a page?
+> Yes, set the pageID option on login (this doesn't work if you set it using api.setOptions, it affects the login process).
+> ```js
+> login(credentials, {pageID: "000000000000000"}, (err, api) => { … }
+> ```
+
+6. I'm getting some crazy weird syntax error like `SyntaxError: Unexpected token [`!!!
+> Please try to update your version of node.js before submitting an issue of this nature.  We like to use new language features.
+
+7. I don't want all of these logging messages!
+> You can use `api.setOptions` to silence the logging. You get the `api` object from `login` (see example above). Do
+> ```js
+> api.setOptions({
+>     logLevel: "silent"
+> });
+> ```
+
 <a name="projects-using-this-api"></a>
 ## Projects using this API:
 
 - [c3c](https://github.com/lequanglam/c3c) - A bot that can be customizable using plugins. Support Facebook & Discord.
 - [Miraiv2](https://github.com/miraiPr0ject/miraiv2) - A simple Facebook Messenger Bot made by CatalizCS and SpermLord.
-- [hut-chat-api](https://github.com/jonellcc/hut-chat-api) - Based FCA by Jonell.
 
 ## Projects using this API (original repository, facebook-chat-api):
 
@@ -240,3 +217,6 @@ login({appState: JSON.parse(fs.readFileSync('appstate.json', 'utf8'))}, (err, ap
 - [messenger-auto-reply](https://gitlab.com/theSander/messenger-auto-reply) - An auto-reply service for Messenger.
 - [BotCore](https://github.com/AstroCB/BotCore) – A collection of tools for writing and managing Facebook Messenger bots.
 - [mnotify](https://github.com/AstroCB/mnotify) – A command-line utility for sending alerts and notifications through Facebook Messenger.
+"# fca-luxury" 
+"# fca-luxury" 
+"# fca-luxury" 
