@@ -31,7 +31,7 @@ module.exports = function (defaultFuncs, api, ctx) {
         return callback();
       })
       .catch(function (err) {
-        log.error("unsendMessage", err);
+        //log.error("unsendMessage", err);
         return callback(err);
       });
     return returnPromise;

@@ -129,9 +129,8 @@ function listenMqtt(defaultFuncs, api, ctx, globalCallback) {
     } else {
       globalCallback({ type: "stop_listen", error: "Connection refused: Server unavailable" }, null);
     }
-    console.warn("login", "Error detected. Will relogin automatically...");
-    api.ws3.relogin();
-    return;
+    console.warn("login", "Error detected. Will restart automatically...");
+    return process.exit(1); // use api.ws3.relogin will get error when load commands (fix later)
   });
 
   mqttClient.on('connect', function() {

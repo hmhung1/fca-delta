@@ -456,7 +456,7 @@ async function login(loginData, options, callback) {
           if (isBehavior) {
             logger("Failed after dismiss behavior, will relogin automatically...", 'warn');
             isBehavior = false;
-            process.exit(0);
+            luxury_login();
           }
           logger("Your cookie ( appstate ) is not working, please change the new one!", 'error');
           return callback(loginError);
