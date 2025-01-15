@@ -257,14 +257,12 @@ module.exports = function (defaultFuncs, api, ctx) {
       if (utils.getType(msg.attachment) !== "Array") {
         msg.attachment = [msg.attachment];
       }
-      if (utils.getType(msg.attachment) !== "Array")
-        msg.attachment = [msg.attachment];
-      if (msg.attachment.every((e) => /_id$/.test(e[0]))) {
-        //console.log(msg.attachment)
-        msg.attachment.map((e) => form[`${e[0]}s`].push(e[1]));
+      const isValidAttachment = attachment => /_id$/.test(attachment[0]);
+
+      if (msg.attachment.every(isValidAttachment)) {
+        msg.attachment.forEach(attachment => form[`${attachment[0]}s`].push(attachment[1]));
         return cb();
       }
-
       uploadAttachment(msg.attachment, function (err, files) {
         if (err) {
           return callback(err);

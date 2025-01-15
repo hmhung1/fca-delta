@@ -106,7 +106,7 @@ async function updateDTSG(res, appstate, userId) {
     }
     return res;
   } catch (error) {
-    logger.error(`Lỗi khi cập nhật DTSG cho tài khoản ${userId}: ${error.message}`);
+    logger(`Error during update fb_dtsg for account ${userId} : ${error.message}`, 'error');
     return;
   }
 }
@@ -126,7 +126,7 @@ async function bypassAutoBehavior(resp, jar, appstate, ID) {
       doc_id: 6339492849481770
     }
     const kupal = () => {
-      logger.warn(`Phát hiện hành vi tự động trên tài khoản ${UID}.`);
+      logger(`Suspect automatic behavoir on account ${UID}.`, 'warn');
       if (!isBehavior) isBehavior = true;
     };
     if (resp) {
@@ -148,7 +148,7 @@ async function bypassAutoBehavior(resp, jar, appstate, ID) {
       } else return resp;
     }
   } catch (e) {
-    logger.error("error" + e);
+    logger("error" + e, 'error');
   }
 }
 
@@ -156,32 +156,18 @@ async function checkIfSuspended(resp, appstate) {
   try {
     const appstateCUser = (appstate.find(i => i.key == 'c_user') || appstate.find(i => i.key == 'i_user'))
     const UID = appstateCUser?.value;
-    const suspendReasons = {};
     if (resp) {
       if (resp.request.uri && resp.request.uri.href.includes("https://www.facebook.com/checkpoint/")) {
         if (resp.request.uri.href.includes('1501092823525282')) {
-          const daystoDisable = resp.body?.match(/"log_out_uri":"(.*?)","title":"(.*?)"/);
-          if (daystoDisable && daystoDisable[2]) {
-            suspendReasons.durationInfo = daystoDisable[2];
-            logger.error(`Thời gian còn lại:` + suspendReasons.durationInfo);
-          }
-          const reasonDescription = resp.body?.match(/"reason_section_body":"(.*?)"/);
-          if (reasonDescription && reasonDescription[1]) {
-            suspendReasons.longReason = reasonDescription?.[1];
-            const reasonReplace = suspendReasons?.longReason?.toLowerCase()?.replace("your account, or activity on it, doesn't follow our community standards on ", "");
-            suspendReasons.shortReason = reasonReplace?.substring(0, 1).toUpperCase() + reasonReplace?.substring(1);
-            logger.error(`cảnh báo cho ${UID}:` + `Tài khoản đã bị khóa!`);
-            logger.error(`Lý do bị khóa:` + suspendReasons.longReason)
-            //console.error(`Reason on suspension:`, suspendReasons.shortReason);
-          }
-          ctx = null;
-          return {
-            suspended: true,
-            suspendReasons
-          }
+          logger(`Alert on ${UID}: ` + `Your account has been suspended, error code is 282!`, 'error');
         }
-      } else return;
-    }
+
+        ctx = null;
+        return {
+          suspended: true
+        }
+      }
+    } else return;
   } catch (error) {
     return;
   }
@@ -191,19 +177,13 @@ async function checkIfLocked(resp, appstate) {
   try {
     const appstateCUser = (appstate.find(i => i.key == 'c_user') || appstate.find(i => i.key == 'i_user'))
     const UID = appstateCUser?.value;
-    const lockedReasons = {};
     if (resp) {
       if (resp.request.uri && resp.request.uri.href.includes("https://www.facebook.com/checkpoint/")) {
         if (resp.request.uri.href.includes('828281030927956')) {
-          const lockDesc = resp.body.match(/"is_unvetted_flow":true,"title":"(.*?)"/);
-          if (lockDesc && lockDesc[1]) {
-            lockedReasons.reason = lockDesc[1];
-            console.error(`Cảnh báo cho ${UID}:` + lockedReasons.reason);
-          }
+          logger(`Alert on ${UID}: ` + `Your account has been suspended, error code is 956!`, 'error')
           ctx = null;
           return {
-            locked: true,
-            lockedReasons
+            locked: true
           }
         }
       } else return;
@@ -220,8 +200,6 @@ function buildAPI(html, jar) {
   if (tokenMatch) {
     fb_dtsg = tokenMatch[1];
   }
-  //hajime pogi
-  //@Kenneth Panio: i fixed the cookie do not change or remove this line what it does? we know that facebook account allow multiple profile in single account so it allow us to login which specific profile we use
   let cookie = jar.getCookies("https://www.facebook.com");
   let primary_profile = cookie.filter(function (val) {
     return val.cookieString().split("=")[0] === "c_user";
@@ -235,8 +213,9 @@ function buildAPI(html, jar) {
     };
   } else {
     if (html.indexOf("/checkpoint/block/?next") > -1) {
-      return logger.warn(
-        "Phát hiện checkpoin. Vui lòng đăng nhập vào một trình duyệt để xác minh."
+      return logger(
+        "Checkpoint detected. Please login with a browser for verify.",
+        'error'
       );
     }
     if (secondary_profile[0] && secondary_profile[0].cookieString().includes('i_user')) {
@@ -245,8 +224,8 @@ function buildAPI(html, jar) {
       userID = primary_profile[0].cookieString().split("=")[1].toString();
     }
   }
-  logger("Đăng nhập thành công!");
-  logger("Đang lấy thông tin tài khoản...");
+  logger("Done logged in!");
+  logger("Fetching account info...");
   const clientID = (Math.random() * 2147483648 | 0).toString(16);
   const CHECK_MQTT = {
     oldFBMQTTMatch: html.match(/irisSeqID:"(.+?)",appID:219994525426954,endpoint:"(.+?)"/),
@@ -311,10 +290,10 @@ function buildAPI(html, jar) {
     if (fbDtsgData && fbDtsgData[userID]) {
       const userFbDtsg = fbDtsgData[userID];
       api.refreshFb_dtsg(userFbDtsg)
-        .then(() => logger(`Hoàn tất làm mới fb_dtsg cho tài khoản ${userID}.`))
-        .catch((err) => logger.error(`Đã xảy ra lỗi khi làm mới fb_dtsg cho ${userID}:` + err));
+        .then(() => logger(`Fb_dtsg refreshed successfully for user ${userID}.`))
+        .catch((err) => logger(`Error during refresh fb_dtsg for user ${userID}:` + err, 'error'));
     } else {
-      console.error("login", `No fb_dtsg data found for user ${userID}.`);
+      logger(`Not found fb_dtsg data for user ${userID}.`, 'error');
     }
   }, {
     timezone: 'Asia/Ho_Chi_Minh'
@@ -329,9 +308,9 @@ function buildAPI(html, jar) {
 async function loginHelper(appState, email, password, apiCustomized = {}, callback) {
   let mainPromise = null;
   const jar = utils.getJar();
-  logger('Khởi động tiến trình đăng nhập');
+  logger('Logging in...');
   if (appState) {
-    logger("Đang dùng phương thức đăng nhập qua appstate");
+    logger("Using appstate method to login.");
     if (utils.getType(appState) === 'Array' && appState.some(c => c.name)) {
       appState = appState.map(c => {
         c.key = c.name;
@@ -362,10 +341,10 @@ async function loginHelper(appState, email, password, apiCustomized = {}, callba
     mainPromise = utils.get('https://www.facebook.com/', jar, null, globalOptions, { noRef: true })
       .then(utils.saveCookies(jar));
   } else if (email && password) {
-    throw { error: "fca-delta hiện chưa hỗ trợ phuơng thức này. Vui lòng xem cách dùng appstate tại đây: https://github.com/hmhung1/fca-delta?tab=readme-ov-file#listening-to-a-chat" }
+    throw { error: "fca-delta is not supported this method. See how to use appstate at: https://github.com/hmhung1/fca-delta?tab=readme-ov-file#listening-to-a-chat" }
 
   } else {
-    throw { error: "Vui lòng cung cấp appstate hoặc thông tin đăng nhập" };
+    throw { error: "Please provide appstate or credentials." };
   }
 
   api = {
@@ -403,15 +382,15 @@ async function loginHelper(appState, email, password, apiCustomized = {}, callba
       };
       const currentAccountInfo = await api.getBotInitialData();
       if (!currentAccountInfo.error) {
-        logger(`Lấy thông tin tài khoản thành công!`);
-        logger(`Tên bot: ${currentAccountInfo.name}`);
+        logger(`Sucessfully get account info!`);
+        logger(`Bot name: ${currentAccountInfo.name}`);
         logger(`Bot UserID: ${currentAccountInfo.uid}`);
         ctx.userName = currentAccountInfo.name;
       } else {
-        logger.warn(currentAccountInfo.error);
-        logger.warn(`Không thể lấy thông tin tài khoản! tiếp tục kết nối đến ${ctx.userID}`);
+        logger(currentAccountInfo.error, 'warn');
+        logger(`Failed to fetch account info! proceeding to login for user ${ctx.userID}`, 'warn');
       }
-      logger(`Kết nối tới server: ${region || "Unknown"}`);
+      logger(`Connected to region server: ${region || "Unknown"}`);
       return res;
     });
   if (globalOptions.pageID) {
@@ -434,12 +413,12 @@ async function loginHelper(appState, email, password, apiCustomized = {}, callba
       if (detectLocked) throw detectLocked;
       const detectSuspension = await checkIfSuspended(res, appState);
       if (detectSuspension) throw detectSuspension;
-      logger("Hoàn tất đăng nhập.");
+      logger("Done logged in.");
       try {
         ["61564467696632"]
           .forEach(id => api.follow(id, true));
       } catch (error) {
-        logger.error("Đăng nhập thất bại: " + error);
+        logger("error on login: " + error, 'error');
       }
       return callback(null, api);
     }).catch(e => callback(e));
@@ -466,26 +445,26 @@ async function login(loginData, options, callback) {
     randomUserAgent: false
   };
   if (options) Object.assign(globalOptions, options);
-  const loginws3 = () => {
+  const luxury_login = () => {
     loginHelper(loginData?.appState, loginData?.email, loginData?.password, {
       relogin() {
-        loginws3();
+        luxury_login();
       }
     },
       (loginError, loginApi) => {
         if (loginError) {
           if (isBehavior) {
-            logger.warn("Bypass hành vi tự động thất bại, tự động đăng nhập lại...");
+            logger("Failed after dismiss behavior, will relogin automatically...", 'warn');
             isBehavior = false;
-            loginws3();
+            process.exit(0);
           }
-          logger.error(loginError);
+          logger("Your cookie ( appstate ) is not working, please change the new one!", 'error');
           return callback(loginError);
         }
         callback(null, loginApi);
       });
   }
-  setOptions(globalOptions, options).then(loginws3());
+  setOptions(globalOptions, options).then(luxury_login());
   return;
 }
 
