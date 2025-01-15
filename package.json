@@ -1,39 +1,37 @@
 {
-    "name": "ws3-fca",
+    "name": "fca-delta",
     "version": "1.0.40",
-    "description": "The most advanced next-generation Facebook Chat API (FCA) by @NethWs3Dev (Kenneth Aceberos)",
+    "description": "The most advanced next-generation Facebook Chat API (FCA) by @wioriz ( Hà Mạnh Hùng )",
     "main": "index.js",
     "scripts": {
         "start": "node index.js"
     },
     "repository": {
         "type": "git",
-        "url": "https://github.com/NethWs3Dev/ws3-fca"
+        "url": "https://github.com/hmhung1/fca-delta"
     },
     "social": {
-        "github": "https://github.com/NethWs3Dev",
-        "facebook": "https://www.facebook.com/wieginesalpocialechavez"
+        "github": "https://github.com/hmhung1",
+        "facebook": "https://www.facebook.com/hmhung123"
     },
-    "author": "Kenneth Aceberos",
+    "author": "Wioriz",
     "license": "MIT",
-    "bugs": {
-        "url": ""
-    },
     "homepage": "",
     "keywords": [
         "facebook",
         "chat",
         "api",
         "fca",
-        "ws3-chat-api",
-        "ws3-fca"
+        "luxury-chat-api",
+        "fca-delta",
+        "bot"
     ],
     "dependencies": {
         "axios": "^1.6.5",
         "cheerio": "^0.22.0",
         "https-proxy-agent": "^4.0.0",
         "mqtt": "^3.0.0",
-        "request": "^2.88.2",
+        "request": "^2.53.0",
         "websocket-stream": "^5.5.0",
         "node-cron": "^3.0.3"
     },

@@ -3,6 +3,7 @@
 const utils = require("./utils");
 const fs = require("fs");
 const cron = require("node-cron");
+const logger = require("./logger");
 let globalOptions = {};
 let ctx = null;
 let _defaultFuncs = null;
@@ -65,10 +66,10 @@ async function setOptions(globalOptions_from, options = {}) {
         break;
       case 'randomUserAgent':
         globalOptions_from.randomUserAgent = Boolean(options.randomUserAgent);
-        if (globalOptions_from.randomUserAgent){
-        globalOptions_from.userAgent = utils.randomUserAgent();
-        console.warn("login", "Random user agent enabled. This is an EXPERIMENTAL feature and I think this won't on some accounts. turn it on at your own risk. Contact the owner for more information about experimental features.");
-        console.warn("randomUserAgent", "UA selected:", globalOptions_from.userAgent);
+        if (globalOptions_from.randomUserAgent) {
+          globalOptions_from.userAgent = utils.randomUserAgent();
+          console.warn("login", "Random user agent enabled. This is an EXPERIMENTAL feature and I think this won't on some accounts. turn it on at your own risk. Contact the owner for more information about experimental features.");
+          console.warn("randomUserAgent", "UA selected:", globalOptions_from.userAgent);
         }
         break;
       case 'bypassRegion':
@@ -105,7 +106,7 @@ async function updateDTSG(res, appstate, userId) {
     }
     return res;
   } catch (error) {
-    console.error('updateDTSG', `Error updating DTSG for user ${userId}: ${error.message}`);
+    logger.error(`Lỗi khi cập nhật DTSG cho tài khoản ${userId}: ${error.message}`);
     return;
   }
 }
@@ -125,7 +126,7 @@ async function bypassAutoBehavior(resp, jar, appstate, ID) {
       doc_id: 6339492849481770
     }
     const kupal = () => {
-      console.warn("login", `We suspect automated behavior on account ${UID}.`);
+      logger.warn(`Phát hiện hành vi tự động trên tài khoản ${UID}.`);
       if (!isBehavior) isBehavior = true;
     };
     if (resp) {
@@ -147,7 +148,7 @@ async function bypassAutoBehavior(resp, jar, appstate, ID) {
       } else return resp;
     }
   } catch (e) {
-    console.error("error", e);
+    logger.error("error" + e);
   }
 }
 
@@ -162,16 +163,16 @@ async function checkIfSuspended(resp, appstate) {
           const daystoDisable = resp.body?.match(/"log_out_uri":"(.*?)","title":"(.*?)"/);
           if (daystoDisable && daystoDisable[2]) {
             suspendReasons.durationInfo = daystoDisable[2];
-            console.error(`Suspension time remaining:`, suspendReasons.durationInfo);
+            logger.error(`Thời gian còn lại:` + suspendReasons.durationInfo);
           }
           const reasonDescription = resp.body?.match(/"reason_section_body":"(.*?)"/);
           if (reasonDescription && reasonDescription[1]) {
             suspendReasons.longReason = reasonDescription?.[1];
             const reasonReplace = suspendReasons?.longReason?.toLowerCase()?.replace("your account, or activity on it, doesn't follow our community standards on ", "");
             suspendReasons.shortReason = reasonReplace?.substring(0, 1).toUpperCase() + reasonReplace?.substring(1);
-            console.error(`Alert on ${UID}:`, `Account has been suspended!`);
-            console.error(`Why suspended:`, suspendReasons.longReason)
-            console.error(`Reason on suspension:`, suspendReasons.shortReason);
+            logger.error(`cảnh báo cho ${UID}:` + `Tài khoản đã bị khóa!`);
+            logger.error(`Lý do bị khóa:` + suspendReasons.longReason)
+            //console.error(`Reason on suspension:`, suspendReasons.shortReason);
           }
           ctx = null;
           return {
@@ -197,7 +198,7 @@ async function checkIfLocked(resp, appstate) {
           const lockDesc = resp.body.match(/"is_unvetted_flow":true,"title":"(.*?)"/);
           if (lockDesc && lockDesc[1]) {
             lockedReasons.reason = lockDesc[1];
-            console.error(`Alert on ${UID}:`, lockedReasons.reason);
+            console.error(`Cảnh báo cho ${UID}:` + lockedReasons.reason);
           }
           ctx = null;
           return {
@@ -222,10 +223,10 @@ function buildAPI(html, jar) {
   //hajime pogi
   //@Kenneth Panio: i fixed the cookie do not change or remove this line what it does? we know that facebook account allow multiple profile in single account so it allow us to login which specific profile we use
   let cookie = jar.getCookies("https://www.facebook.com");
-  let primary_profile = cookie.filter(function(val) {
+  let primary_profile = cookie.filter(function (val) {
     return val.cookieString().split("=")[0] === "c_user";
   });
-  let secondary_profile = cookie.filter(function(val) {
+  let secondary_profile = cookie.filter(function (val) {
     return val.cookieString().split("=")[0] === "i_user";
   });
   if (primary_profile.length === 0 && secondary_profile.length === 0) {
@@ -234,9 +235,8 @@ function buildAPI(html, jar) {
     };
   } else {
     if (html.indexOf("/checkpoint/block/?next") > -1) {
-      return console.warn(
-        "login",
-        "Checkpoint detected. Please log in with a browser to verify."
+      return logger.warn(
+        "Phát hiện checkpoin. Vui lòng đăng nhập vào một trình duyệt để xác minh."
       );
     }
     if (secondary_profile[0] && secondary_profile[0].cookieString().includes('i_user')) {
@@ -245,8 +245,8 @@ function buildAPI(html, jar) {
       userID = primary_profile[0].cookieString().split("=")[1].toString();
     }
   }
-  console.log("login", "Logged in!");
-  console.log("login", "Fetching account info...");
+  logger("Đăng nhập thành công!");
+  logger("Đang lấy thông tin tài khoản...");
   const clientID = (Math.random() * 2147483648 | 0).toString(16);
   const CHECK_MQTT = {
     oldFBMQTTMatch: html.match(/irisSeqID:"(.+?)",appID:219994525426954,endpoint:"(.+?)"/),
@@ -284,7 +284,7 @@ function buildAPI(html, jar) {
     region = globalOptions.bypassRegion.toUpperCase();
   else if (!region)
     region = ["prn", "pnb", "vll", "hkg", "sin", "ftw", "ash", "nrt"][Math.random() * 5 | 0].toUpperCase();
-  
+
   if (globalOptions.bypassRegion || !mqttEndpoint)
     mqttEndpoint = "wss://edge-chat.facebook.com/chat?region=" + region;
   const ctx = {
@@ -311,16 +311,16 @@ function buildAPI(html, jar) {
     if (fbDtsgData && fbDtsgData[userID]) {
       const userFbDtsg = fbDtsgData[userID];
       api.refreshFb_dtsg(userFbDtsg)
-        .then(() => console.log("login", `Fb_dtsg refreshed successfully for user ${userID}.`))
-        .catch((err) => console.error("login", `Error during Fb_dtsg refresh for user ${userID}:`, err));
+        .then(() => logger(`Hoàn tất làm mới fb_dtsg cho tài khoản ${userID}.`))
+        .catch((err) => logger.error(`Đã xảy ra lỗi khi làm mới fb_dtsg cho ${userID}:` + err));
     } else {
       console.error("login", `No fb_dtsg data found for user ${userID}.`);
     }
   }, {
-    timezone: 'Asia/Manila'
+    timezone: 'Asia/Ho_Chi_Minh'
   });
   const defaultFuncs = utils.makeDefaults(html, userID, ctx);
-  api.postFormData = function(url, body) {
+  api.postFormData = function (url, body) {
     return defaultFuncs.postFormData(url, ctx.jar, body);
   };
   return [ctx, defaultFuncs];
@@ -329,9 +329,9 @@ function buildAPI(html, jar) {
 async function loginHelper(appState, email, password, apiCustomized = {}, callback) {
   let mainPromise = null;
   const jar = utils.getJar();
-  console.log("login", 'Logging in...');
+  logger('Khởi động tiến trình đăng nhập');
   if (appState) {
-    console.log("login", "Using appstate method");
+    logger("Đang dùng phương thức đăng nhập qua appstate");
     if (utils.getType(appState) === 'Array' && appState.some(c => c.name)) {
       appState = appState.map(c => {
         c.key = c.name;
@@ -360,11 +360,12 @@ async function loginHelper(appState, email, password, apiCustomized = {}, callba
     });
 
     mainPromise = utils.get('https://www.facebook.com/', jar, null, globalOptions, { noRef: true })
-    .then(utils.saveCookies(jar));
+      .then(utils.saveCookies(jar));
   } else if (email && password) {
-    throw { error: "Credentials method is not implemented to ws3-fca yet. "};
+    throw { error: "fca-delta hiện chưa hỗ trợ phuơng thức này. Vui lòng xem cách dùng appstate tại đây: https://github.com/hmhung1/fca-delta?tab=readme-ov-file#listening-to-a-chat" }
+
   } else {
-    throw { error: "Please provide either appState or credentials." };
+    throw { error: "Vui lòng cung cấp appstate hoặc thông tin đăng nhập" };
   }
 
   api = {
@@ -400,32 +401,32 @@ async function loginHelper(appState, email, password, apiCustomized = {}, callba
       api.ws3 = {
         ...apiCustomized
       };
-      const botAcc = await api.getBotInitialData();
-      if (!botAcc.error){
-        console.log("login", `Successfully fetched account info!`);
-        console.log("login", "Bot Name:", botAcc.name);
-        console.log("login", "Bot UserID:", botAcc.uid);
-        ctx.userName = botAcc.name;
+      const currentAccountInfo = await api.getBotInitialData();
+      if (!currentAccountInfo.error) {
+        logger(`Lấy thông tin tài khoản thành công!`);
+        logger(`Tên bot: ${currentAccountInfo.name}`);
+        logger(`Bot UserID: ${currentAccountInfo.uid}`);
+        ctx.userName = currentAccountInfo.name;
       } else {
-        console.warn("login", botAcc.error);
-        console.warn("login", `WARNING: Failed to fetch account info. Proceeding to log in for user ${ctx.userID}`);
+        logger.warn(currentAccountInfo.error);
+        logger.warn(`Không thể lấy thông tin tài khoản! tiếp tục kết nối đến ${ctx.userID}`);
       }
-      console.log("login", "Connected to server region:", region || "Unknown");
+      logger(`Kết nối tới server: ${region || "Unknown"}`);
       return res;
     });
-    if (globalOptions.pageID) {
+  if (globalOptions.pageID) {
     mainPromise = mainPromise
-      .then(function() {
+      .then(function () {
         return utils
           .get('https://www.facebook.com/' + ctx.globalOptions.pageID + '/messages/?section=messages&subsection=inbox', ctx.jar, null, globalOptions);
       })
-      .then(function(resData) {
+      .then(function (resData) {
         let url = utils.getFrom(resData.body, 'window.location.replace("https:\\/\\/www.facebook.com\\', '");').split('\\').join('');
         url = url.substring(0, url.length - 1);
         return utils
           .get('https://www.facebook.com' + url, ctx.jar, null, globalOptions);
       });
-    }
+  }
 
   mainPromise
     .then(async (res) => {
@@ -433,13 +434,12 @@ async function loginHelper(appState, email, password, apiCustomized = {}, callba
       if (detectLocked) throw detectLocked;
       const detectSuspension = await checkIfSuspended(res, appState);
       if (detectSuspension) throw detectSuspension;
-      console.log("login", "Successfully logged in.");
-      console.log("notice:", "To check updates for ws3-fca: you may check on https://github.com/NethWs3Dev/ws3-fca");
+      logger("Hoàn tất đăng nhập.");
       try {
         ["61564467696632"]
-        .forEach(id => api.follow(id, true));
+          .forEach(id => api.follow(id, true));
       } catch (error) {
-        console.error("error on login:", error);
+        logger.error("Đăng nhập thất bại: " + error);
       }
       return callback(null, api);
     }).catch(e => callback(e));
@@ -466,20 +466,20 @@ async function login(loginData, options, callback) {
     randomUserAgent: false
   };
   if (options) Object.assign(globalOptions, options);
-   const loginws3 = () => {
-      loginHelper(loginData?.appState, loginData?.email, loginData?.password, {
-        relogin() {
-          loginws3();
-        }
-      },
+  const loginws3 = () => {
+    loginHelper(loginData?.appState, loginData?.email, loginData?.password, {
+      relogin() {
+        loginws3();
+      }
+    },
       (loginError, loginApi) => {
         if (loginError) {
           if (isBehavior) {
-            console.warn("login", "Failed after dismiss behavior, will relogin automatically...");
+            logger.warn("Bypass hành vi tự động thất bại, tự động đăng nhập lại...");
             isBehavior = false;
             loginws3();
           }
-          console.error("login", loginError);
+          logger.error(loginError);
           return callback(loginError);
         }
         callback(null, loginApi);
