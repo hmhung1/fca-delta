@@ -1139,7 +1139,7 @@ function parseAndCheckLogin(ctx, http, retryCount) {
         const retryTime = Math.floor(Math.random() * 5000);
         console.warn("parseAndCheckLogin", "Got status code " + data.statusCode + " - " + retryCount + ". attempt to retry in " + retryTime + " milliseconds...");
         const url = data.request.uri.protocol + "//" + data.request.uri.hostname + data.request.uri.pathname;
-        if (data.request.headers["Content-Type"].split(";")[0] === "multipart/form-data") {
+        if (data.request.headers["content-Type"].split(";")[0] === "multipart/form-data") {
           return delay(retryTime)
             .then(function() {
               return http
