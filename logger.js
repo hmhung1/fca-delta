@@ -14,7 +14,7 @@ module.exports = (data, option) => {
       console.log(coloredData);
       break;
     default:
-      coloredData = gradient('#ed3491', '#cb34ed', '#347bed', '#deed34').multiline('[ FCA-DELTA ] - ' + data);
+      coloredData = chalk.bold.hex('#9900FF')('[ FCA Delta ] > ') + chalk.bold(data);
       console.log(chalk.bold(coloredData));
       break;
   }
