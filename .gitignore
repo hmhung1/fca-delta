@@ -1,0 +1,38 @@
+# Node.js
+node_modules/
+.git/
+
+# npm logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# TypeScript
+*.tsbuildinfo
+
+# Logs
+logs
+*.log
+pids
+*.pid
+*.seed
+
+# Coverage
+coverage/
+
+# Environment files
+.env
+
+# Miscellaneous
+.DS_Store
+Thumbs.db
+
+# IDE and editor config
+.vscode/
+.idea/
+*.sublime-workspace
+*.sublime-project
+
+# Operating system files
+ehthumbs.db
+Icon?
