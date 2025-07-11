@@ -106,7 +106,7 @@ module.exports = function (defaultFuncs, api, ctx) {
         return callback();
       })
       .catch(function (err) {
-        console.error("addUserToGroup", err);
+        utils.error("addUserToGroup", err);
         return callback(err);
       });
 

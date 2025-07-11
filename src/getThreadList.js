@@ -1,7 +1,6 @@
 "use strict";
 
 const utils = require("../utils");
-// @NethWs3Dev
 
 function formatEventReminders(reminder) {
   return {
@@ -213,7 +212,7 @@ module.exports = function (defaultFuncs, api, ctx) {
     }
 
     const form = {
-      av: ctx.userID,
+      av: ctx.i_userID || ctx.userID,
       queries: JSON.stringify({
         o0: {
           // This doc_id was valid on 2020-07-20
@@ -261,7 +260,7 @@ module.exports = function (defaultFuncs, api, ctx) {
         );
       })
       .catch((err) => {
-        console.error("getThreadList", err);
+        utils.error("getThreadList", err);
         return callback(err);
       });
 

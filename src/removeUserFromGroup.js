@@ -70,7 +70,7 @@ module.exports = function (defaultFuncs, api, ctx) {
         return callback();
       })
       .catch(function (err) {
-        console.error("removeUserFromGroup", err);
+        utils.error("removeUserFromGroup", err);
         return callback(err);
       });
 
