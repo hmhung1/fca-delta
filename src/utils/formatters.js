@@ -33,17 +33,17 @@ function getExtension(original_extension, fullFileName = "") {
 function _formatAttachment(attachment1, attachment2) {
   const blob_attachment = attachment1.mercury || attachment1.blob_attachment || attachment1.sticker_attachment;
    const type_attachment = blob_attachment && blob_attachment.__typename ? blob_attachment.__typename : attachment1.attach_type;
-   if (type_attachment == null && attachment1.id != null && attachment1.extensible_attachment == null) {
-       return {
-           type: "share",
-          ID: attachment1.id,
-           url: attachment1.href,
-          title: "Shared Content",
-           description: "Unsupported shared content.",
-          source: null,
-          isUnrecognized: true
-       };
-   }
+//    if (type_attachment == null && attachment1.id != null && attachment1.extensible_attachment == null) {
+//        return {
+//            type: "share",
+//           ID: attachment1.id,
+//            url: attachment1.href,
+//           title: "Shared Content",
+//            description: "Unsupported shared content.",
+//           source: null,
+//           isUnrecognized: true
+//        };
+//    }
     
     if (!attachment1.attach_type && attachment1.imageMetadata) {
         return {

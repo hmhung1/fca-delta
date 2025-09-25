@@ -166,7 +166,7 @@ async function listenMqtt(defaultFuncs, api, ctx, globalCallback) {
     mqttClient.on('message', async (topic, message, _packet) => {
         try {
             const jsonMessage = JSON.parse(message.toString());
-            //console.log(jsonMessage)
+            console.log(message.toString())
             //const packet = JSON.parse(_packet.payload.toString());
             if (topic === "/t_ms") {
                 if (jsonMessage.lastIssuedSeqId){

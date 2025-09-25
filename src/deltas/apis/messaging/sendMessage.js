@@ -215,14 +215,10 @@ module.exports = (defaultFuncs, api, ctx) => {
         msg.attachment = [msg.attachment];
       }
 
-      const isAttachmentID = a => /_id$/.test(a[0]); // ['image_id', '1234']
-
-      // Push các ID sẵn
+      const isAttachmentID = a => /_id$/.test(a[0]);
       msg.attachment.filter(isAttachmentID).forEach(a => {
         form[`${a[0]}s`].push(a[1]);
       });
-
-      // Upload các file mới
       const filesToUpload = msg.attachment.filter(a => !isAttachmentID(a));
       if (filesToUpload.length > 0) {
         const uploadedFiles = await uploadAttachment(filesToUpload);
@@ -232,7 +228,6 @@ module.exports = (defaultFuncs, api, ctx) => {
         });
       }
     }
-
     if (msg.url) {
       form["shareable_attachment[share_type]"] = "100";
       const params = await getUrl(msg.url);
