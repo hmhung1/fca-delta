@@ -19,17 +19,17 @@ module.exports = (defaultFuncs, api, ctx) => {
   async function uploadAttachment(attachments) {
     var uploads = [];
     for (var i = 0; i < attachments.length; i++) {
-     if (!utils.isReadableStream(attachments[i])) {
+      if (!utils.isReadableStream(attachments[i])) {
         throw new Error("Attachment should be a readable stream and not " + utils.getType(attachments[i]) + ".");
-     }
-     const oksir = await defaultFuncs.postFormData("https://upload.facebook.com/ajax/mercury/upload.php", ctx.jar,{
-       upload_1024: attachments[i],
-       voice_clip: "true"
-     }, {}).then(utils.parseAndCheckLogin(ctx, defaultFuncs));
-     if (oksir.error) {
-       throw new Error(resData);
-     }
-     uploads.push(oksir.payload.metadata[0]);
+      }
+      const oksir = await defaultFuncs.postFormData("https://upload.facebook.com/ajax/mercury/upload.php", ctx.jar, {
+        upload_1024: attachments[i],
+        voice_clip: "true"
+      }, {}).then(utils.parseAndCheckLogin(ctx, defaultFuncs));
+      if (oksir.error) {
+        throw new Error(resData);
+      }
+      uploads.push(oksir.payload.metadata[0]);
     }
     return uploads;
   }
@@ -40,8 +40,8 @@ module.exports = (defaultFuncs, api, ctx) => {
       image_width: 960,
       uri: url
     }).then(utils.parseAndCheckLogin(ctx, defaultFuncs));
-    if (!resData || resData.error || !resData.payload){
-        throw new Error(resData);
+    if (!resData || resData.error || !resData.payload) {
+      throw new Error(resData);
     }
   }
 
@@ -93,12 +93,12 @@ module.exports = (defaultFuncs, api, ctx) => {
       return callback(resData);
     }
     const messageInfo = resData.payload.actions.reduce((p, v) => {
-        return { threadID: v.thread_fbid, messageID: v.message_id, timestamp: v.timestamp } || p;
+      return { threadID: v.thread_fbid, messageID: v.message_id, timestamp: v.timestamp } || p;
     }, null);
     return callback(null, messageInfo);
   }
 
-    function send(form, threadID, messageAndOTID, callback, isGroup) {
+  function send(form, threadID, messageAndOTID, callback, isGroup) {
     // We're doing a query to this to check if the given id is the id of
     // a user or of a group chat. The form will be different depending
     // on that.
@@ -178,7 +178,7 @@ module.exports = (defaultFuncs, api, ctx) => {
       source: "source:chat:web",
       "source_tags[0]": "source:chat",
       ...(msg.body && {
-          body: msg.body
+        body: msg.body
       }),
       html_body: false,
       ui_push_phase: "V3",
@@ -191,7 +191,7 @@ module.exports = (defaultFuncs, api, ctx) => {
       has_attachment: !!(msg.attachment || msg.url || msg.sticker),
       signatureID: utils.getSignatureID(),
       ...(replyToMessage && {
-          replied_to_message_id: replyToMessage
+        replied_to_message_id: replyToMessage
       })
     };
 
@@ -210,19 +210,29 @@ module.exports = (defaultFuncs, api, ctx) => {
       form.file_ids = [];
       form.video_ids = [];
       form.audio_ids = [];
+
       if (utils.getType(msg.attachment) !== "Array") {
         msg.attachment = [msg.attachment];
       }
-      const isValidAttachment = attachment => /_id$/.test(attachment[0]);
-      if (msg.attachment.every(isValidAttachment)) {
-        msg.attachment.forEach(attachment => form[`${attachment[0]}s`].push(attachment[1]));
-      }
-      const files = await uploadAttachment(msg.attachment);
-      files.forEach(file => {
+
+      const isAttachmentID = a => /_id$/.test(a[0]); // ['image_id', '1234']
+
+      // Push các ID sẵn
+      msg.attachment.filter(isAttachmentID).forEach(a => {
+        form[`${a[0]}s`].push(a[1]);
+      });
+
+      // Upload các file mới
+      const filesToUpload = msg.attachment.filter(a => !isAttachmentID(a));
+      if (filesToUpload.length > 0) {
+        const uploadedFiles = await uploadAttachment(filesToUpload);
+        uploadedFiles.forEach(file => {
           const type = Object.keys(file)[0];
-          form["" + type + "s"].push(file[type]);
-      }); 
+          form[`${type}s`].push(file[type]);
+        });
+      }
     }
+
     if (msg.url) {
       form["shareable_attachment[share_type]"] = "100";
       const params = await getUrl(msg.url);
@@ -240,7 +250,7 @@ module.exports = (defaultFuncs, api, ctx) => {
       }
       form.body = msg.emoji;
       form["tags[0]"] = "hot_emoji_size:" + msg.emojiSize;
-    } 
+    }
     if (msg.mentions) {
       for (let i = 0; i < msg.mentions.length; i++) {
         const mention = msg.mentions[i];
