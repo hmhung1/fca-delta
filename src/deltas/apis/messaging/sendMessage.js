@@ -216,7 +216,6 @@ module.exports = (defaultFuncs, api, ctx) => {
       const isValidAttachment = attachment => /_id$/.test(attachment[0]);
       if (msg.attachment.every(isValidAttachment)) {
         msg.attachment.forEach(attachment => form[`${attachment[0]}s`].push(attachment[1]));
-        return cb();
       }
       const files = await uploadAttachment(msg.attachment);
       files.forEach(file => {
