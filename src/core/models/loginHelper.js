@@ -227,7 +227,9 @@ async function loginHelper(credentials, globalOptions, callback, setOptionsFunc,
                 api['listenMqtt'] = require(listenPath)(defaultFuncs, api, ctx);
             }
         };
-
+        api.postFormData = function (url, body) {
+            return defaultFuncs.postFormData(url, ctx.jar, body);
+        };
         api.getCurrentUserID = () => ctx.userID;
         api.getOptions = (key) => key ? globalOptions[key] : globalOptions;
         loadApiModules();

@@ -1,5 +1,6 @@
 "use strict";
 
+const { is } = require('bluebird');
 const utils = require('../../../utils');
 // @NethWs3Dev
 
@@ -89,15 +90,60 @@ module.exports = (defaultFuncs, api, ctx) => {
       if (resData.error === 1545012) {
         utils.warn("sendMessage", "Got error 1545012. This might mean that you're not part of the conversation " + threadID);
       }
-      throw new Error(resData);
+      return callback(resData);
     }
     const messageInfo = resData.payload.actions.reduce((p, v) => {
         return { threadID: v.thread_fbid, messageID: v.message_id, timestamp: v.timestamp } || p;
     }, null);
-    return messageInfo;
+    return callback(null, messageInfo);
   }
 
-  return async (msg, threadID, replyToMessage, isSingleUser = false) => {
+    function send(form, threadID, messageAndOTID, callback, isGroup) {
+    // We're doing a query to this to check if the given id is the id of
+    // a user or of a group chat. The form will be different depending
+    // on that.
+    if (utils.getType(threadID) === "Array") {
+      sendContent(form, threadID, false, messageAndOTID, callback);
+    } else {
+      if (utils.getType(isGroup) != "Boolean") {
+        sendContent(form, threadID, threadID.length <= 15, messageAndOTID, callback);
+      } else {
+        sendContent(form, threadID, !isGroup, messageAndOTID, callback);
+      }
+    }
+  }
+
+
+  return async (msg, threadID, callback, replyToMessage, isSingleUser) => {
+    typeof isSingleUser == "undefined" ? isSingleUser = null : "";
+    if (
+      !callback &&
+      (utils.getType(threadID) === "Function" ||
+        utils.getType(threadID) === "AsyncFunction")
+    ) {
+      return threadID({ error: "Pass a threadID as a second argument." });
+    }
+    if (
+      !replyToMessage &&
+      utils.getType(callback) === "String"
+    ) {
+      replyToMessage = callback;
+      callback = undefined;
+    }
+
+    var resolveFunc = function () { };
+    var rejectFunc = function () { };
+    var returnPromise = new Promise(function (resolve, reject) {
+      resolveFunc = resolve;
+      rejectFunc = reject;
+    });
+
+    if (!callback) {
+      callback = function (err, data) {
+        if (err) return rejectFunc(err);
+        resolveFunc(data);
+      };
+    }
     let msgType = utils.getType(msg);
     let threadIDType = utils.getType(threadID);
     let messageIDType = utils.getType(replyToMessage);
@@ -167,6 +213,11 @@ module.exports = (defaultFuncs, api, ctx) => {
       if (utils.getType(msg.attachment) !== "Array") {
         msg.attachment = [msg.attachment];
       }
+      const isValidAttachment = attachment => /_id$/.test(attachment[0]);
+      if (msg.attachment.every(isValidAttachment)) {
+        msg.attachment.forEach(attachment => form[`${attachment[0]}s`].push(attachment[1]));
+        return cb();
+      }
       const files = await uploadAttachment(msg.attachment);
       files.forEach(file => {
           const type = Object.keys(file)[0];
@@ -210,7 +261,7 @@ module.exports = (defaultFuncs, api, ctx) => {
         form["profile_xmd[" + i + "][type]"] = "p";
       }
     }
-    const result = await sendContent(form, threadID, isSingleUser, messageAndOTID);
-    return result;
+    send(form, threadID, messageAndOTID, callback, isSingleUser);
+    return returnPromise;
   };
 };
