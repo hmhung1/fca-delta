@@ -16,7 +16,6 @@ const utils = require('../../utils');
 async function buildAPI(html, jar, netData, globalOptions, fbLinkFunc, errorRetrievingMsg) {
     let userID;
     const cookies = jar.getCookiesSync(fbLinkFunc()); // Use passed fbLinkFunc
-    console.log(cookies)
     const primaryProfile = cookies.find((val) => val.cookieString().startsWith("c_user="));
     const secondaryProfile = cookies.find((val) => val.cookieString().startsWith("i_user="));
     if (!primaryProfile && !secondaryProfile) {
