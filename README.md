@@ -14,7 +14,7 @@ See [below](#projects-using-this-api) for projects using this API.
 See the [full changelog](/CHANGELOG.md) for release details.
 
 ## Install
-If you just want to use fca-unofficial, you should use this command:
+If you just want to use fca-delta, you should use this command:
 ```bash
 npm install fca-delta
 ```
@@ -25,7 +25,7 @@ If you want to test your bots without creating another account on Facebook, you 
 
 ## Example Usage
 ```javascript
-const login = require("fca-delta");
+const { login } = require("fca-delta");
 
 // Create simple echo bot
 login({email: "FB_EMAIL", password: "FB_PASSWORD"}, (err, api) => {
@@ -64,7 +64,7 @@ __Tip__: to find your own ID, you can look inside the cookies. The `userID` is u
 
 __Example (Basic Message)__
 ```js
-const login = require("fca-delta");
+const { login } = require("fca-delta");
 
 login({email: "FB_EMAIL", password: "FB_PASSWORD"}, (err, api) => {
     if(err) return console.error(err);
@@ -77,7 +77,7 @@ login({email: "FB_EMAIL", password: "FB_PASSWORD"}, (err, api) => {
 
 __Example (File upload)__
 ```js
-const login = require("fca-delta");
+const { login } = require("fca-delta");
 
 login({email: "FB_EMAIL", password: "FB_PASSWORD"}, (err, api) => {
     if(err) return console.error(err);
@@ -101,7 +101,7 @@ __Example__
 
 ```js
 const fs = require("fs");
-const login = require("fca-delta");
+const { login } = require("fca-delta");
 
 var credentials = {email: "FB_EMAIL", password: "FB_PASSWORD"};
 
@@ -125,7 +125,7 @@ __Example__
 
 ```js
 const fs = require("fs");
-const login = require("fca-delta");
+const { login } = require("fca-delta");
 
 // Simple echo bot. It will repeat everything that you say.
 // Will stop when you say '/stop'
@@ -217,7 +217,3 @@ login({appState: JSON.parse(fs.readFileSync('appstate.json', 'utf8'))}, (err, ap
 - [messenger-auto-reply](https://gitlab.com/theSander/messenger-auto-reply) - An auto-reply service for Messenger.
 - [BotCore](https://github.com/AstroCB/BotCore) – A collection of tools for writing and managing Facebook Messenger bots.
 - [mnotify](https://github.com/AstroCB/mnotify) – A command-line utility for sending alerts and notifications through Facebook Messenger.
-"# fca-delta" 
-"# fca-delta" 
-"# fca-delta" 
-# fca-delta
