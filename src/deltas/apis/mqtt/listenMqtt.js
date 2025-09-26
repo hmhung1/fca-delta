@@ -166,7 +166,6 @@ async function listenMqtt(defaultFuncs, api, ctx, globalCallback) {
     mqttClient.on('message', async (topic, message, _packet) => {
         try {
             const jsonMessage = JSON.parse(message.toString());
-            console.log(message.toString())
             //const packet = JSON.parse(_packet.payload.toString());
             if (topic === "/t_ms") {
                 if (jsonMessage.lastIssuedSeqId){
@@ -193,6 +192,7 @@ async function listenMqtt(defaultFuncs, api, ctx, globalCallback) {
 }
 
 module.exports = (defaultFuncs, api, ctx) => {
+    let hungdeptrai = null;
     let globalCallback = () => {};
     let reconnectInterval;
     getSeqID = async () => {
@@ -211,13 +211,41 @@ module.exports = (defaultFuncs, api, ctx) => {
                     }
                 })
             };
-            const resData = await defaultFuncs.post("https://www.facebook.com/api/graphqlbatch/", ctx.jar, form).then(utils.parseAndCheckLogin(ctx, defaultFuncs));
-            if (utils.getType(resData) != "Array" || (resData.error && resData.error !== 1357001)) throw resData;
-            ctx.lastSeqId = resData[0].o0.data.viewer.message_threads.sync_sequence_id;
-            listenMqtt(defaultFuncs, api, ctx, globalCallback);
+            defaultFuncs.post("https://www.facebook.com/api/graphqlbatch/", ctx.jar, form)
+            .then(res => {
+                hungdeptrai = res;
+                return res;
+            })
+            .then(utils.parseAndCheckLogin(ctx, defaultFuncs))
+            .then(resData => {
+                if (utils.getType(resData) != "Array") {
+                    if (hungdeptrai.body.includes('FBScrapingWarningCometApp')) {
+                        return global.bypassAutoBehavior(undefined, ctx.jar, undefined, ctx.userID, ctx.globalOptions);
+                    } else {
+                        utils.error("Your cookie was not working, please change your cookie.");
+                    }
+                } else {
+                    if (resData && resData[resData.length - 1].error_results > 0) throw resData[0].o0.errors;
+                    if (resData[resData.length - 1].successful_results === 0) throw {
+                        error: "getSeqId: there was no successful_results",
+                        res: resData
+                    };
+                    if (resData[0].o0.data.viewer.message_threads.sync_sequence_id) {
+                        ctx.lastSeqId = resData[0].o0.data.viewer.message_threads.sync_sequence_id;
+                        listenMqtt(defaultFuncs, api, ctx, globalCallback);
+                    } else throw {
+                        error: "getSeqId: no sync_sequence_id found.",
+                        res: resData
+                    };
+                }
+            })
         } catch (err) {
+            if (hungdeptrai.body.includes('FBScrapingWarningCometApp')) {
+                return global.bypassAutoBehavior(undefined, ctx.jar, undefined, ctx.userID, ctx.globalOptions);
+            } 
             const descriptiveError = new Error("Failed to get sequence ID. This is often caused by an invalid appstate. Please try generating a new appstate.json file.");
             descriptiveError.originalError = err;
+            ctx.loggedIn = false;
             return globalCallback(descriptiveError);
         }
     };

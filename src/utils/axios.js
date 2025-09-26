@@ -10,7 +10,9 @@ const { getType } = require("./constants");
 
 // Create an axios instance with cookie jar support
 const jar = new CookieJar();
-const client = wrapper(axios.create({ jar }));
+const client = wrapper(axios.create({ 
+    jar
+}));
 
 // Store proxy configuration globally within this module
 let proxyConfig = {};
