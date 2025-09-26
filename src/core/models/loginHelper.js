@@ -97,7 +97,7 @@ async function loginHelper(
       } else if (typeof appState === 'string') {
         cookieStrings = appState.split(';').map(s => s.trim()).filter(Boolean);
       } else {
-        return utils.error("Invalid appState format. Please provide an array of cookie objects or a cookie string.");
+        throw utils.error("Invalid appState format. Please provide an array of cookie objects or a cookie string.");
       }
 
       cookieStrings.forEach(cookieString => {
@@ -133,8 +133,12 @@ async function loginHelper(
       };
       try {
         let resp = await axios.get(`${url}?${qs.stringify(params)}`);
+        console.log(resp.data);
         if (resp?.data?.error_code === 401) {
-          return utils.error("Wrong password / email");
+          throw new Error("Invalid email or password.");
+        }
+        if (resp?.data?.error_code === 405) {
+          throw new Error("Account checkpointed. Please login to your account via browser and resolve the checkpoint.");
         }
         if (resp?.data?.error_code === 406) {
           if (credentials.twoFactor) {
@@ -157,7 +161,7 @@ async function loginHelper(
               utils.log("2FA verification successful");
             }
           } else {
-            return utils.error("2FA authentication is required!");
+            throw new Error("Account has 2FA enabled, but no twoFactor secret was provided in credentials.");
           }
         }
         let cstrs = resp.data["session_cookies"].map(c => `${c.name}=${c.value}`);
@@ -168,10 +172,11 @@ async function loginHelper(
           jar.setCookie(str, `https://${domain}`);
         });
       } catch (e) {
-        return utils.error("Error while login with password / email: " + e);
+        console.log(e);
+        throw new Error("Invaid email or password.");
       }
     } else {
-      return utils.error("No cookie or credentials found. Please provide cookies or credentials.");
+     throw new Error("No cookie or credentials found. Please provide cookies or credentials.");
     }
 
     if (!api) {
