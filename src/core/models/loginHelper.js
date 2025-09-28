@@ -128,8 +128,8 @@ async function loginHelper(
         sig: "c1c640010993db92e5afd11634ced864",
         advertiser_id: uuidv4(),
         device_platform: 'android',
-        app_version: '392.0.0.0.66',
-        network_type: '4G'
+        app_version: '531.0.0.47.70',
+        network_type: 'WIFI'
       };
       try {
         let resp = await axios.get(`${url}?${qs.stringify(params)}`);
@@ -277,7 +277,11 @@ async function loginHelper(
         api.globalOptions = globalOptions;
         const { name: botName = "Facebook User", uid = ctx.userID } = await api.getBotInitialData();
         utils.log(`Hello, ${botName} (${uid})`);
-        return callback(null, api);
+        return callback(null, api)
+      })
+      .catch(error => {
+        utils.error(error.error || error);
+        return callback(error);
       });
   } catch (error) {
     utils.error(error.error || error);
