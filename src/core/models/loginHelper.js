@@ -133,7 +133,6 @@ async function loginHelper(
       };
       try {
         let resp = await axios.get(`${url}?${qs.stringify(params)}`);
-        console.log(resp.data);
         if (resp?.data?.error_code === 401) {
           throw new Error("Invalid email or password.");
         }
