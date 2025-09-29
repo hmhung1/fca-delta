@@ -125,9 +125,22 @@ async function listenMqtt(defaultFuncs, api, ctx, globalCallback) {
         });
     });
     ctx.mqttClient = mqttClient;
+
+    function stopListening() {
+        if (mqttClient) {
+          mqttClient.unsubscribe("/webrtc");
+          mqttClient.unsubscribe("/rtc_multi");
+          mqttClient.unsubscribe("/onevc");
+          mqttClient.publish("/browser_close", "{}");
+          mqttClient.end(false, function(...data) {
+            ctx.mqttClient = null; mqttClient = null;
+          });
+        }
+      }
+
     mqttClient.on('error', (err) => {
         utils.error("listenMqtt", err);
-        mqttClient.end();
+        stopListening();
         if (ctx.globalOptions.autoReconnect) getSeqID();
         else globalCallback({ type: "stop_listen", error: "Connection refused" });
     });
@@ -192,7 +205,6 @@ async function listenMqtt(defaultFuncs, api, ctx, globalCallback) {
 }
 
 module.exports = (defaultFuncs, api, ctx) => {
-    let hungdeptrai = null;
     let globalCallback = () => {};
     let reconnectInterval;
     getSeqID = async () => {
@@ -211,41 +223,13 @@ module.exports = (defaultFuncs, api, ctx) => {
                     }
                 })
             };
-            defaultFuncs.post("https://www.facebook.com/api/graphqlbatch/", ctx.jar, form)
-            .then(res => {
-                hungdeptrai = res;
-                return res;
-            })
-            .then(utils.parseAndCheckLogin(ctx, defaultFuncs))
-            .then(resData => {
-                if (utils.getType(resData) != "Array") {
-                    if (hungdeptrai.body.includes('FBScrapingWarningCometApp')) {
-                        return global.bypassAutoBehavior(undefined, ctx.jar, undefined, ctx.userID, ctx.globalOptions);
-                    } else {
-                        utils.error("Your cookie was not working, please change your cookie.");
-                    }
-                } else {
-                    if (resData && resData[resData.length - 1].error_results > 0) throw resData[0].o0.errors;
-                    if (resData[resData.length - 1].successful_results === 0) throw {
-                        error: "getSeqId: there was no successful_results",
-                        res: resData
-                    };
-                    if (resData[0].o0.data.viewer.message_threads.sync_sequence_id) {
-                        ctx.lastSeqId = resData[0].o0.data.viewer.message_threads.sync_sequence_id;
-                        listenMqtt(defaultFuncs, api, ctx, globalCallback);
-                    } else throw {
-                        error: "getSeqId: no sync_sequence_id found.",
-                        res: resData
-                    };
-                }
-            })
+            const resData = await defaultFuncs.post("https://www.facebook.com/api/graphqlbatch/", ctx.jar, form).then(utils.parseAndCheckLogin(ctx, defaultFuncs));
+            if (utils.getType(resData) != "Array" || (resData.error && resData.error !== 1357001)) throw resData;
+            ctx.lastSeqId = resData[0].o0.data.viewer.message_threads.sync_sequence_id;
+            listenMqtt(defaultFuncs, api, ctx, globalCallback);
         } catch (err) {
-            if (hungdeptrai.body.includes('FBScrapingWarningCometApp')) {
-                return global.bypassAutoBehavior(undefined, ctx.jar, undefined, ctx.userID, ctx.globalOptions);
-            } 
             const descriptiveError = new Error("Failed to get sequence ID. This is often caused by an invalid appstate. Please try generating a new appstate.json file.");
             descriptiveError.originalError = err;
-            ctx.loggedIn = false;
             return globalCallback(descriptiveError);
         }
     };
