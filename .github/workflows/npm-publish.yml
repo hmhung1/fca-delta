@@ -1,0 +1,38 @@
+name: Publish Node.js Package
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Get last commit diff
+        id: changes
+        run: |
+          git fetch --depth=2
+          git diff HEAD^ HEAD -- package.json > diff.txt
+          if grep '"version":' diff.txt; then
+            echo "changed=true" >> $GITHUB_OUTPUT
+          else
+            echo "changed=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Stop if version not changed
+        if: steps.changes.outputs.changed == 'false'
+        run: echo "⏹ Version not changed, skipping publish" && exit 0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          registry-url: https://registry.npmjs.org/
+
+      - run: npm ci
+      - run: npm test
+      - run: npm publish --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
