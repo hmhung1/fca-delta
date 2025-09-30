@@ -18,7 +18,7 @@ If you just want to use fca-delta, you should use this command:
 ```bash
 npm install fca-delta
 ```
-It will download ` fca-delta` from NPM repositories
+It will download `fca-delta` from NPM repositories
 
 ## Testing your bots
 If you want to test your bots without creating another account on Facebook, you can use [Facebook Whitehat Accounts](https://www.facebook.com/whitehat/accounts/).

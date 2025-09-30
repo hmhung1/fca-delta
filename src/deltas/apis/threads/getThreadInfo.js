@@ -1,13 +1,7 @@
-// @ChoruOfficial
 "use strict";
 
-const utils = require('../../../utils');
+const utils = require("../../../utils");
 
-/**
- * Formats an event reminder object from a GraphQL response.
- * @param {Object} reminder The raw event reminder object.
- * @returns {Object} A formatted event reminder object.
- */
 function formatEventReminders(reminder) {
   return {
     reminderID: reminder.id,
@@ -34,13 +28,8 @@ function formatEventReminders(reminder) {
   };
 }
 
-/**
- * Formats a thread object from a GraphQL response.
- * @param {Object} data The raw GraphQL data for a thread.
- * @returns {Object | null} A formatted thread object or null if data is invalid.
- */
 function formatThreadGraphQLResponse(data) {
-  if (data.errors) return null;
+  if (data.errors) return null; // Return null if there are errors
   const messageThread = data.message_thread;
   if (!messageThread) return null;
 
@@ -50,10 +39,20 @@ function formatThreadGraphQLResponse(data) {
 
   const lastM = messageThread.last_message;
   const snippetID =
-    lastM?.nodes?.[0]?.message_sender?.messaging_actor?.id || null;
-  const snippetText = lastM?.nodes?.[0]?.snippet || null;
+    lastM &&
+    lastM.nodes &&
+    lastM.nodes[0] &&
+    lastM.nodes[0].message_sender &&
+    lastM.nodes[0].message_sender.messaging_actor
+      ? lastM.nodes[0].message_sender.messaging_actor.id
+      : null;
+  const snippetText =
+    lastM && lastM.nodes && lastM.nodes[0] ? lastM.nodes[0].snippet : null;
   const lastR = messageThread.last_read_receipt;
-  const lastReadTimestamp = lastR?.nodes?.[0]?.timestamp_precise || null;
+  const lastReadTimestamp =
+    lastR && lastR.nodes && lastR.nodes[0] && lastR.nodes[0].timestamp_precise
+      ? lastR.nodes[0].timestamp_precise
+      : null;
 
   return {
     threadID: threadID,
@@ -147,23 +146,33 @@ function formatThreadGraphQLResponse(data) {
   };
 }
 
-/**
- * @param {Object} defaultFuncs
- * @param {Object} api
- * @param {Object} ctx
- * @returns {function(threadID: string | string[]): Promise<Object>}
- */
 module.exports = function (defaultFuncs, api, ctx) {
-  /**
-   * Retrieves information about one or more threads.
-   * @param {string|string[]} threadID A single thread ID or an array of thread IDs.
-   * @returns {Promise<Object>} A promise that resolves with an object of thread info, or a single thread object if one ID was passed.
-   */
-  return async function getThreadInfo(threadID) {
-    const threadIDs = Array.isArray(threadID) ? threadID : [threadID];
-    
+  return function getThreadInfoGraphQL(threadID, callback) {
+    let resolveFunc = function () {};
+    let rejectFunc = function () {};
+    const returnPromise = new Promise(function (resolve, reject) {
+      resolveFunc = resolve;
+      rejectFunc = reject;
+    });
+
+    if (
+      utils.getType(callback) != "Function" &&
+      utils.getType(callback) != "AsyncFunction"
+    ) {
+      callback = function (err, data) {
+        if (err) {
+          return rejectFunc(err);
+        }
+        resolveFunc(data);
+      };
+    }
+
+    if (utils.getType(threadID) !== "Array") {
+      threadID = [threadID];
+    }
+
     let form = {};
-    threadIDs.forEach((t, i) => {
+    threadID.map(function (t, i) {
       form["o" + i] = {
         doc_id: "3449967031715030",
         query_params: {
@@ -181,30 +190,37 @@ module.exports = function (defaultFuncs, api, ctx) {
       batch_name: "MessengerGraphQLThreadFetcher",
     };
 
-    try {
-        const resData = await defaultFuncs
-            .post("https://www.facebook.com/api/graphqlbatch/", ctx.jar, form)
-            .then(utils.parseAndCheckLogin(ctx, defaultFuncs));
-
+    defaultFuncs
+      .post("https://www.facebook.com/api/graphqlbatch/", ctx.jar, form)
+      .then(utils.parseAndCheckLogin(ctx, defaultFuncs))
+      .then(function (resData) {
         if (resData.error) {
-            throw resData;
+          throw resData;
         }
 
         const threadInfos = {};
         for (let i = resData.length - 2; i >= 0; i--) {
-            const res = resData[i];
-            if (res.error_results) continue;
-            
-            const threadInfo = formatThreadGraphQLResponse(res[Object.keys(res)[0]].data);
-            if (threadInfo) {
-                threadInfos[threadInfo.threadID || threadID[threadID.length - 1 - i]] = threadInfo;
-            }
+          const threadInfo = formatThreadGraphQLResponse(
+            resData[i][Object.keys(resData[i])[0]].data,
+          );
+          if (threadInfo) { // Only add valid threadInfo
+            threadInfos[
+              threadInfo.threadID || threadID[threadID.length - 1 - i]
+            ] = threadInfo;
+          }
         }
 
-        return Array.isArray(threadID) ? threadInfos : Object.values(threadInfos)[0] || null;
-    } catch (err) {
-        utils.error("getThreadInfo", err);
-        throw err;
-    }
+        if (Object.values(threadInfos).length == 1) {
+          callback(null, Object.values(threadInfos)[0]);
+        } else {
+          callback(null, threadInfos);
+        }
+      })
+      .catch(function () {
+        // Do nothing on error
+        callback(null, null);
+      });
+
+    return returnPromise;
   };
 };
