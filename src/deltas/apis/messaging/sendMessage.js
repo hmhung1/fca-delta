@@ -1,6 +1,5 @@
 "use strict";
 
-const { is } = require('bluebird');
 const utils = require('../../../utils');
 // @NethWs3Dev
 

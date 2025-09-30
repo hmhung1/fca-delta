@@ -165,7 +165,9 @@ class GoogleAuthenticator {
     }
 }
 
+const devices = new Devices();
+
 module.exports = {
     GoogleAuthenticator,
-    Devices
+    devices
 }

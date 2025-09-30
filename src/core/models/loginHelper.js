@@ -6,9 +6,8 @@ const path = require('path');
 const fs = require('fs');
 const qs = require("querystring");
 const { v4: uuidv4 } = require("uuid");
-const { GoogleAuthenticator, Devices } = require("./../../utils/loginSupport.js");
+const { GoogleAuthenticator, devices } = require("./../../utils/loginSupport.js");
 const ga = new GoogleAuthenticator();
-const device = new Devices();
 let mainPromise = null;
 
 /**
@@ -107,8 +106,8 @@ async function loginHelper(
         jar.setCookie(str, `https://${domain}`);
       });
     } else if (credentials.email && credentials.password) {
-      const androidDevice = device.getRandomDevice();
-      const machineId = device.randomString(24);
+      const androidDevice = devices.getRandomDevice();
+      const machineId = devices.randomString(24);
 
       const url = "https://api.facebook.com/method/auth.login";
       const params = {
