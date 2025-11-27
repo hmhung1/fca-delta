@@ -1,0 +1,12 @@
+diff --git a/package.json b/package.json
+index bfd2e8e..55093f4 100644
+--- a/package.json
++++ b/package.json
+@@ -1,6 +1,6 @@
+ {
+   "name": "fca-delta",
+-  "version": "3.8.2",
++  "version": "3.8.21",
+   "module": "commonjs",
+   "types": "src/types/index.d.ts",
+   "description": "A node.js package for automating Facebook Messenger bot, and is one of the most advanced next-generation Facebook Chat API (FCA) by @hung2ka10",

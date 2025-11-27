@@ -463,6 +463,7 @@ function formatDeltaMessage(m) {
     return {
         type: "message",
         senderID: formatID(md.actorFbId.toString()),
+        args: (m.delta.body || '').trim().split(/\s+/),
         body: m.delta.body || "",
         threadID: formatID(
             (md.threadKey.threadFbId || md.threadKey.otherUserFbId).toString()
@@ -495,6 +496,7 @@ function formatDeltaMessage(m) {
                                                         originalMessage.group_thread_info.participant_ids.map(function(v) {
                                                             return formatID(v.toString());
                                                         }): [formatID(originalMessage.sender_fbid)],
+                                                        args: (originalMessage.body || '').trim().split(/\s+/),
                                                         body: originalMessage.body || "",
                                                         threadID: formatID(
                                                             (

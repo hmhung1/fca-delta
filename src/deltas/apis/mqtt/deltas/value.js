@@ -89,6 +89,7 @@ function parseDelta(defaultFuncs, api, ctx, globalCallback, v) {
                 return { ...att, error: ex, type: "unknown" };
               }
             }),
+            args: (delta.deltaMessageReply.message.body || '').trim().split(/\s+/),
             body: (delta.deltaMessageReply.message.body || ""),
             isGroup: !!delta.deltaMessageReply.message.messageMetadata.threadKey.threadFbId,
             mentions: mentions,
@@ -116,6 +117,7 @@ function parseDelta(defaultFuncs, api, ctx, globalCallback, v) {
                     return { ...att, error: ex, type: "unknown" };
                   }
               }),
+              args: (delta.deltaMessageReply.repliedToMessage.body || '').trim().split(/\s+/),
               body: delta.deltaMessageReply.repliedToMessage.body || "",
               isGroup: !!delta.deltaMessageReply.repliedToMessage.messageMetadata.threadKey.threadFbId,
               mentions: rmentions,
