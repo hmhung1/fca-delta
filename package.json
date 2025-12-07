@@ -1,6 +1,6 @@
 {
   "name": "fca-delta",
-  "version": "3.9.0",
+  "version": "3.9.01",
   "module": "commonjs",
   "types": "src/types/index.d.ts",
   "description": "A node.js package for automating Facebook Messenger bot, and is one of the most advanced next-generation Facebook Chat API (FCA) by @hung2ka10",
@@ -47,7 +47,8 @@
     "node-cron": "^3.0.3",
     "tough-cookie": "^5.1.2",
     "undici": "^5.29.0",
-    "websocket-stream": "^5.5.0"
+    "websocket-stream": "^5.5.0",
+    "bluebird": "^3.7.2"
   },
   "devDependencies": {
     "@types/axios": "^0.9.36",
